@@ -30,4 +30,4 @@ create table if not exists orderdetail(
     primary key(oID, pID),
     foreign key (oID) references `order`(oID),
     foreign key (pID) references product(pID)
-);
+)
