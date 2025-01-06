@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "UserServlet", urlPatterns = "/users")
@@ -60,6 +61,12 @@ public class UserServlet extends HttpServlet {
                 case "delete":
                     deleteUser(request, response);
                     break;
+                case "test-without-tran":
+                    testWithoutTran(request, response);
+                    break;
+                case "test-use-tran":
+                    testUseTran(request, response);
+                    break;
                 default:
                     listUser(request, response);
                     break;
@@ -67,6 +74,14 @@ public class UserServlet extends HttpServlet {
         } catch (SQLException ex) {
             throw new ServletException(ex);
         }
+    }
+
+    private void testWithoutTran(HttpServletRequest request, HttpServletResponse response) {
+        userDAO.insertUpdateWithoutTransaction();
+    }
+
+    private void testUseTran(HttpServletRequest request, HttpServletResponse response) {
+        userDAO.insertUpdateUseTransaction();
     }
 
     private void listUser(HttpServletRequest request, HttpServletResponse response)
@@ -86,20 +101,53 @@ public class UserServlet extends HttpServlet {
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
-        User existingUser = userDAO.selectUser(id);
+        //User existingUser = userDAO.selectUser(id);
+        User existingUser = userDAO.getUserById(id);
         RequestDispatcher dispatcher = request.getRequestDispatcher("view/user/edit.jsp");
         request.setAttribute("user", existingUser);
         dispatcher.forward(request, response);
 
     }
 
+//    private void insertUser(HttpServletRequest request, HttpServletResponse response)
+//            throws SQLException, IOException, ServletException {
+//        String name = request.getParameter("name");
+//        String email = request.getParameter("email");
+//        String country = request.getParameter("country");
+//        User newUser = new User(name, email, country);
+//        //userDAO.insertUser(newUser);
+//        userDAO.insertUserStore(newUser);
+//        RequestDispatcher dispatcher = request.getRequestDispatcher("view/user/create.jsp");
+//        dispatcher.forward(request, response);
+//    }
+
     private void insertUser(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException, ServletException {
         String name = request.getParameter("name");
         String email = request.getParameter("email");
         String country = request.getParameter("country");
+
+        String add = request.getParameter("add");
+        String edit = request.getParameter("edit");
+        String delete = request.getParameter("delete");
+        String view = request.getParameter("view");
+        List<Integer> permissions = new ArrayList<>();
+        if (add != null){
+            permissions.add(1);
+        }
+        if (edit != null){
+            permissions.add(2);
+        }
+        if (delete != null){
+            permissions.add(3);
+        }
+        if (view != null){
+            permissions.add(4);
+        }
+
         User newUser = new User(name, email, country);
-        userDAO.insertUser(newUser);
+        //userDAO.insertUser(newUser);
+        userDAO.addUserTransaction(newUser, permissions);
         RequestDispatcher dispatcher = request.getRequestDispatcher("view/user/create.jsp");
         dispatcher.forward(request, response);
     }
